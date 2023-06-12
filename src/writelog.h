@@ -7,32 +7,45 @@
 
 typedef enum logset
 {
-    LOG_DEBUG = 3,
-    LOG_ERROR = 2,
-    LOG_WARN = 1,
+    LOG_INFO = 0,
+    LOG_WARN ,
+    LOG_ERROR ,
+    LOG_DEBUG
 } _logset;
 
 extern _logset loglevel;
 
-#define w3log(args, ...) \
+#define wlog_debug(args, ...) \
     do { \
         if(loglevel >= 3) { \
-           _writelog(__FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
+           _writelog("DEBUG", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
         } \
     } while(0)
 
-#define w2log(args, ...) \
+#define wlog_err(args, ...) \
     do { \
         if(loglevel >= 2) { \
-            _writelog(__FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
+            _writelog("ERROR", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
         } \
     } while(0) 
 
-#define w1log(args, ...) \
+#define wlog_warn(args, ...) \
     do { \
         if(loglevel >= 1) { \
-            _writelog(__FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
+            _writelog("WARN", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
         } \
     } while(0) 
 
-void _writelog(const char *filename, const int line, const char *funcname, const char * args, ...);
+#define wlog_info(args, ...) \
+    do { \
+        if(loglevel >= 1) { \
+            _writelog("INFO", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
+        } \
+    } while(0) 
+
+
+bool createlogfile(char *dir);
+
+void init_wlog();
+void _getnow(char *buf);
+void _writelog(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...);
