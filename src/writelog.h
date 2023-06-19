@@ -70,8 +70,9 @@ extern _logset loglevel;
 
 
 /*  function    */
-void init_wlog(_logset set);
+void _init_wlog(_logset set);
+void _changellevel(_logset set);
 void _writelog(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...);
 void _getnow(char *buf);
 
-bool createlogfile(char *dir, char *name);
+bool _create_log(char *dir, char *name);

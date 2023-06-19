@@ -2,9 +2,14 @@
 
 _logset loglevel = LOG_ERROR;
 
-void init_wlog(_logset set)
+void _init_wlog(_logset set)
 {
     memset(&li, 0x00, sizeof(_loginfo_t));
+    loglevel = set;
+}
+
+void _changellevel(_logset set)
+{
     loglevel = set;
 }
 
@@ -31,7 +36,7 @@ void _getnow(char *buf)
     strftime(buf, sizeof(char) * 128, "%Y-%m-%d %H:%M:%S", localtime(&now));
 }
 
-bool createlogfile(char *dir, char *name)
+bool _create_log(char *dir, char *name)
 {
     FILE *file;
     DIR *dirinfo;
