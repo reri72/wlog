@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <time.h>
-
+#include <pthread.h>
 
 //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //  https://github.com/reri72/
@@ -17,7 +17,9 @@
 
 /*  definition  */
 #define MAX_SIZE    4096
-#define A_MAX_SIZE
+#define MAX_ASIZE   2048
+#define FALSE       0;
+#define TRUE        1;
 
 #define wlog_debug(args, ...) \
     do { \
@@ -60,12 +62,15 @@ typedef enum logset
 
 typedef struct loginfo
 {
-    char dir[1024];
-    char fname[512];
+    char dir[512];
+    char fname[128];
+    char fullpath[641];
 } _loginfo_t;
 
 _loginfo_t li;
 extern _logset loglevel;
+
+pthread_mutex_t mutex;
 
 
 
@@ -76,3 +81,5 @@ void _writelog(const char *level, const char *filename, const int line, const ch
 void _getnow(char *buf);
 
 bool _create_log(char *dir, char *name);
+
+int _writetext(char *text);

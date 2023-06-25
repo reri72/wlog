@@ -4,6 +4,8 @@ _logset loglevel = LOG_ERROR;
 
 void _init_wlog(_logset set)
 {
+    pthread_mutex_init(&mutex, NULL);
+
     memset(&li, 0x00, sizeof(_loginfo_t));
     loglevel = set;
 }
@@ -16,8 +18,8 @@ void _changellevel(_logset set)
 void _writelog(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...)
 {
     char time_string[128] = {0,};
-    char logbuffer[MAX_SIZE] = {0,};
-    char argbuf[MAX_SIZE] = {0,};
+    char logbuffer[MAX_ASIZE] = {0,};
+    char argbuf[MAX_ASIZE] = {0,};
     va_list va;
 
     va_start(va, args);
@@ -25,9 +27,19 @@ void _writelog(const char *level, const char *filename, const int line, const ch
     va_end(va);
 
     _getnow(time_string);
-    snprintf(logbuffer, MAX_SIZE, "%-20s [%s] %s  %s(%d) :  %s", time_string, level, funcname, filename, line, argbuf);
+    snprintf(logbuffer, MAX_SIZE, "%-20s [%s]  %s  %s(%d) :  %s",
+                                    time_string, level, funcname, filename, line, argbuf);
 
-    printf("%s", logbuffer);    // continue...
+    int ret = 1;
+    while(ret)
+    {
+        ret = pthread_mutex_trylock(&mutex);
+        if(ret == 0)
+        {
+            ret = _writetext(logbuffer);
+            pthread_mutex_unlock(&mutex);
+        }
+    }
 }
 
 void _getnow(char *buf)
@@ -38,10 +50,11 @@ void _getnow(char *buf)
 
 bool _create_log(char *dir, char *name)
 {
-    FILE *file;
-    DIR *dirinfo;
-    struct dirent *direntry;
     bool ret = false;
+
+    DIR *dirinfo;
+    FILE *lfile;
+    struct dirent *direntry;
 
     if(dir != NULL)
     {
@@ -57,16 +70,44 @@ bool _create_log(char *dir, char *name)
                 printf("%s \n",direntry->d_name);
             }
 #endif
-            file = fopen(name, "a+");
-            if(file != NULL)
+            lfile = fopen(name, "a+");
+            if(lfile != NULL)
             {
                 ret = true;
                 strcpy(li.fname, name);
-                fclose(file);
+                fclose(lfile);
+
+                snprintf(li.fullpath, 641, "%s%s", li.dir, li.fname);
+            }
+            else
+            {
+                ret = false;
             }
             closedir(dirinfo);
+        }
+        else
+        {
+            ret = false;
         }
     }
  
     return ret;
+}
+
+int _writetext(char *text)
+{
+    FILE *lfile = NULL;
+
+    lfile = fopen(li.fullpath, "a+");
+    if(lfile != NULL)
+    {
+        fprintf(lfile, text);
+        fclose(lfile);
+    }
+    else
+    {
+        return 1;
+    }
+
+    return 0;
 }
