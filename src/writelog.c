@@ -40,12 +40,32 @@ void _writelog(const char *level, const char *filename, const int line, const ch
             pthread_mutex_unlock(&mutex);
         }
     }
+
+    if( _szchk() > (KBYTE * KBYTE * KBYTE) )
+    {
+        // logfile lotation
+    }
 }
 
 void _getnow(char *buf)
 {
     time_t now = time(NULL);
     strftime(buf, sizeof(char) * 128, "%Y-%m-%d %H:%M:%S", localtime(&now));
+}
+
+int _szchk()
+{
+    struct stat finfo;
+    int res = 0;
+    
+    if(stat(li.fullpath, &finfo) < 0)
+    {
+        printf("[%s] file size check error. \n", __FUNCTION__);
+        perror("stat");
+        exit(1);
+    }
+
+    return finfo.st_size;           //byte
 }
 
 bool _create_log(char *dir, char *name)
@@ -92,6 +112,11 @@ bool _create_log(char *dir, char *name)
     }
  
     return ret;
+}
+
+bool _lotate_file()
+{
+    //기존에 있던 파일 바꿔치기 (.1, *.2 ~~)
 }
 
 int _writetext(char *text)

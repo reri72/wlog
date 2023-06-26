@@ -18,6 +18,8 @@
 /*  definition  */
 #define MAX_SIZE    4096
 #define MAX_ASIZE   2048
+#define KBYTE  1024
+
 #define FALSE       0;
 #define TRUE        1;
 
@@ -81,5 +83,7 @@ void _writelog(const char *level, const char *filename, const int line, const ch
 void _getnow(char *buf);
 
 bool _create_log(char *dir, char *name);
+bool _lotate_file();
 
 int _writetext(char *text);
+int _szchk();
