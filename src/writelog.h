@@ -67,6 +67,7 @@ typedef struct loginfo
     char dir[512];
     char fname[128];
     char fullpath[641];
+    uint8_t num;
 } _loginfo_t;
 
 _loginfo_t li;

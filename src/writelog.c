@@ -41,9 +41,14 @@ void _writelog(const char *level, const char *filename, const int line, const ch
         }
     }
 
-    if( _szchk() > (KBYTE * KBYTE * KBYTE) )
+    //if( _szchk() > (KBYTE * KBYTE * KBYTE) )
+    if( _szchk() > 1024 )
     {
-        // logfile lotation
+        bool res = _lotate_file();
+        if(res)
+        {
+            printf("lotation success!! \n");
+        }
     }
 }
 
@@ -88,6 +93,8 @@ bool _create_log(char *dir, char *name)
             while (direntry = readdir(dirinfo))
             {
                 printf("%s \n",direntry->d_name);
+
+                // 읽어들여서 로그 파일 이름과 유사한 파일이 있으면 li.num를 증가시켜야 함
             }
 #endif
             lfile = fopen(name, "a+");
@@ -116,7 +123,33 @@ bool _create_log(char *dir, char *name)
 
 bool _lotate_file()
 {
-    //기존에 있던 파일 바꿔치기 (.1, *.2 ~~)
+    char nname[128] = {0,};
+    int res = 0;
+    bool ret = false;
+
+    if(li.num > 9)
+    {
+        //  하나씩 옮겨서 만들기
+    }
+    else
+    {
+        snprintf(nname, 641, "%s%s.%d", li.dir, li.fname, li.num);
+        if( rename(li.fullpath, nname) < 0 )
+        {
+            printf("file rename failed \n");
+            return false;
+        }
+        else
+        {
+            ret = _create_log(li.dir, li.fname);
+            if(!ret)
+            {
+                printf("lotation is failed \n");
+            }
+        }
+    }
+
+    return ret;
 }
 
 int _writetext(char *text)
