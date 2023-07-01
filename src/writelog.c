@@ -93,8 +93,6 @@ bool _create_log(char *dir, char *name)
             while (direntry = readdir(dirinfo))
             {
                 printf("%s \n",direntry->d_name);
-
-                // 읽어들여서 로그 파일 이름과 유사한 파일이 있으면 li.num를 증가시켜야 함
             }
 #endif
             lfile = fopen(name, "a+");
@@ -124,29 +122,30 @@ bool _create_log(char *dir, char *name)
 bool _lotate_file()
 {
     char nname[128] = {0,};
-    int res = 0;
-    bool ret = false;
+    char nname2[128] = {0,};
+    char nfname[128] = {0,};
 
-    if(li.num > 9)
+    bool ret = false;
+    int i;
+    
+    for(i = 9; i > 0; i--)
     {
-        //  하나씩 옮겨서 만들기
+        snprintf(nname, 641, "%s%s.%d", li.dir, li.fname, i);
+        snprintf(nname2, 641, "%s%s.%d", li.dir, li.fname, i+1);
+
+        rename(nname, nname2);
+
+        nname2[0] = 0;
+        nname[0] = 0;
     }
-    else
+
+    snprintf(nfname, 641, "%s.%d", li.fullpath, 1);
+    rename(li.fullpath, nfname);
+    
+    ret = _create_log(li.dir, li.fname);
+    if(!ret)
     {
-        snprintf(nname, 641, "%s%s.%d", li.dir, li.fname, li.num);
-        if( rename(li.fullpath, nname) < 0 )
-        {
-            printf("file rename failed \n");
-            return false;
-        }
-        else
-        {
-            ret = _create_log(li.dir, li.fname);
-            if(!ret)
-            {
-                printf("lotation is failed \n");
-            }
-        }
+        printf("lotation is failed \n");
     }
 
     return ret;
