@@ -6,8 +6,26 @@ void _init_wlog(_logset set)
 {
     pthread_mutex_init(&mutex, NULL);
 
+    loglist = malloc(sizeof(loglist));
+    loglist->next = NULL;
+
     memset(&li, 0x00, sizeof(_loginfo_t));
     loglevel = set;
+}
+
+void _destroy_wlog()
+{
+    pthread_mutex_destroy(&mutex);
+
+    llist_t *cur = loglist;
+    llist_t *next = NULL;
+
+    while(cur != NULL)
+    {
+        next = cur->next;
+        free(cur);
+        cur = next;
+    }
 }
 
 void _changellevel(_logset set)

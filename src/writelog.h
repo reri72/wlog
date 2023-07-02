@@ -67,8 +67,14 @@ typedef struct loginfo
     char dir[512];
     char fname[128];
     char fullpath[641];
-    uint8_t num;
 } _loginfo_t;
+
+typedef struct llist{
+    struct llist *next;
+    char* text;
+} llist_t;
+
+llist_t *loglist;
 
 _loginfo_t li;
 extern _logset loglevel;
@@ -79,6 +85,7 @@ pthread_mutex_t mutex;
 
 /*  function    */
 void _init_wlog(_logset set);
+void _destroy_wlog();
 void _changellevel(_logset set);
 void _writelog(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...);
 void _getnow(char *buf);
