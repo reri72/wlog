@@ -2,15 +2,46 @@
 
 _logset loglevel = LOG_ERROR;
 
+void *log_thread(void *arg)
+{
+    while(status)
+    {
+        n_sleep(0, 500);
+    }
+
+    int sz = get_list_length();
+    printf("len : %d \n", sz);
+
+    n_sleep(0, 10);
+
+    return NULL;
+}
+
 void _init_wlog(_logset set)
 {
-    pthread_mutex_init(&mutex, NULL);
-
+    status = true;
+    
     loglist = malloc(sizeof(loglist));
     loglist->next = NULL;
 
     memset(&li, 0x00, sizeof(_loginfo_t));
     loglevel = set;
+
+    pthread_mutex_init(&mutex, NULL);
+    
+    if( pthread_create(&tid, NULL, log_thread, NULL) != 0 )
+    {
+        printf("[%s] pthread_createe failed. ", __FUNCTION__);
+        perror("thread create error");
+        exit(0);
+    }
+
+    if( pthread_detach(tid) != 0 )
+    {
+        printf("[%s] pthread_detach failed. ", __FUNCTION__);
+        perror("thread detach error");
+        exit(0);
+    }
 }
 
 void _destroy_wlog()
@@ -20,6 +51,10 @@ void _destroy_wlog()
     llist_t *cur = loglist;
     llist_t *next = NULL;
 
+    status = false;
+
+    n_sleep(0, 100);
+    
     while(cur != NULL)
     {
         next = cur->next;
@@ -33,7 +68,7 @@ void _changellevel(_logset set)
     loglevel = set;
 }
 
-void _writelog(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...)
+void _insertlog(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...)
 {
     char time_string[128] = {0,};
     char logbuffer[MAX_ASIZE] = {0,};
@@ -48,26 +83,7 @@ void _writelog(const char *level, const char *filename, const int line, const ch
     snprintf(logbuffer, MAX_SIZE, "%-20s [%s]  %s  %s(%d) :  %s",
                                     time_string, level, funcname, filename, line, argbuf);
 
-    int ret = 1;
-    while(ret)
-    {
-        ret = pthread_mutex_trylock(&mutex);
-        if(ret == 0)
-        {
-            ret = _writetext(logbuffer);
-            pthread_mutex_unlock(&mutex);
-        }
-    }
-
-    //if( _szchk() > (KBYTE * KBYTE * KBYTE) )
-    if( _szchk() > 1024 )
-    {
-        bool res = _lotate_file();
-        if(res)
-        {
-            printf("lotation success!! \n");
-        }
-    }
+    add_list_front(logbuffer);
 }
 
 void _getnow(char *buf)
@@ -169,15 +185,30 @@ bool _lotate_file()
     return ret;
 }
 
-int _writetext(char *text)
+int _writetext()
 {
     FILE *lfile = NULL;
+    int ret = 1;
 
     lfile = fopen(li.fullpath, "a+");
     if(lfile != NULL)
     {
-        fprintf(lfile, text);
-        fclose(lfile);
+        llist_t *cur = loglist;
+        llist_t *next = NULL;
+        
+        ret = pthread_mutex_trylock(&mutex);
+        if(ret == 0)
+        {
+            while(cur != NULL)
+            {
+                next = cur->next;
+                fprintf(lfile, cur->text);
+                cur = next;
+            }
+            free(cur);
+            fclose(lfile);
+            pthread_mutex_unlock(&mutex);
+        }
     }
     else
     {
@@ -185,4 +216,60 @@ int _writetext(char *text)
     }
 
     return 0;
+}
+
+int get_list_length()
+{
+    int len = -1;
+    llist_t *cur = loglist;
+
+    while(cur != NULL)
+    {
+        len++;
+        cur = cur->next;
+    }
+
+    return len; 
+}
+
+void add_list_front(char* nettext)
+{
+    llist_t *cur = loglist;
+    llist_t *newitem = malloc(sizeof(llist_t));
+    
+    newitem->next = cur->next;
+    newitem->text = nettext;
+
+    cur->next = newitem;
+}
+
+void write_list()
+{
+    int ret = 1;
+    while(ret)
+    {
+        ret = _writetext();
+    }
+
+    //if( _szchk() > (KBYTE * KBYTE * KBYTE) )
+    if( _szchk() > 1024 )
+    {
+        bool res = _lotate_file();
+        if(res)
+        {
+            printf("lotation success!! \n");
+        }
+    }
+}
+
+void n_sleep(int sec, int nsec)
+{
+    struct timespec rem, req;
+
+    req.tv_sec = sec;
+    req.tv_nsec = nsec;
+
+    nanosleep(&req, &rem);
+
+    return;
 }
