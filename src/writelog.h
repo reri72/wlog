@@ -67,6 +67,7 @@ typedef struct loginfo
     char dir[512];
     char fname[128];
     char fullpath[641];
+    FILE *lfile;
 } _loginfo_t;
 
 typedef struct llist{
@@ -82,6 +83,8 @@ extern _logset loglevel;
 pthread_mutex_t mutex;
 pthread_t tid;
 volatile bool status;
+
+
 
 /*  function    */
 void *log_thread(void *arg);
@@ -100,6 +103,5 @@ int _szchk();
 
 int get_list_length();
 void add_list_front(char* nettext);
-void write_list();
 
 void n_sleep(int sec, int nsec);

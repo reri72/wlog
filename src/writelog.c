@@ -6,11 +6,36 @@ void *log_thread(void *arg)
 {
     while(status)
     {
-        n_sleep(0, 500);
-    }
+        //n_sleep(0, 50);
+        n_sleep(1, 0);
 
-    int sz = get_list_length();
-    printf("len : %d \n", sz);
+        if(get_list_length() > 0)
+        {
+            if(li.lfile != NULL)
+            {
+                int ret = 1;
+                while(ret)
+                {
+                    ret = _writetext();
+                }
+
+                //if( _szchk() > (KBYTE * KBYTE * KBYTE) )
+                if( _szchk() > 1024 )
+                {
+                    bool res = _lotate_file();
+                    if(res)
+                    {
+                        printf("lotation success!! \n");
+                    }
+                }
+            }
+            printf("len : %d \n", get_list_length());
+        }
+        else
+        {
+            continue;
+        }
+    }
 
     n_sleep(0, 10);
 
@@ -52,14 +77,18 @@ void _destroy_wlog()
     llist_t *next = NULL;
 
     status = false;
-
     n_sleep(0, 100);
-    
+
     while(cur != NULL)
     {
         next = cur->next;
         free(cur);
         cur = next;
+    }
+
+    if(li.lfile != NULL)
+    {
+        fclose(li.lfile);
     }
 }
 
@@ -112,7 +141,6 @@ bool _create_log(char *dir, char *name)
     bool ret = false;
 
     DIR *dirinfo;
-    FILE *lfile;
     struct dirent *direntry;
 
     if(dir != NULL)
@@ -129,24 +157,24 @@ bool _create_log(char *dir, char *name)
                 printf("%s \n",direntry->d_name);
             }
 #endif
-            lfile = fopen(name, "a+");
-            if(lfile != NULL)
+            li.lfile = fopen(name, "a+");
+            if(li.lfile != NULL)
             {
                 ret = true;
                 strcpy(li.fname, name);
-                fclose(lfile);
-
                 snprintf(li.fullpath, 641, "%s%s", li.dir, li.fname);
             }
             else
             {
                 ret = false;
+                status = false;
             }
             closedir(dirinfo);
         }
         else
         {
             ret = false;
+            status = false;
         }
     }
  
@@ -162,6 +190,11 @@ bool _lotate_file()
     bool ret = false;
     int i;
     
+    if(li.lfile != NULL)
+    {
+        fclose(li.lfile);
+    }
+
     for(i = 9; i > 0; i--)
     {
         snprintf(nname, 641, "%s%s.%d", li.dir, li.fname, i);
@@ -187,11 +220,9 @@ bool _lotate_file()
 
 int _writetext()
 {
-    FILE *lfile = NULL;
     int ret = 1;
 
-    lfile = fopen(li.fullpath, "a+");
-    if(lfile != NULL)
+    if(li.lfile != NULL)
     {
         llist_t *cur = loglist;
         llist_t *next = NULL;
@@ -202,11 +233,10 @@ int _writetext()
             while(cur != NULL)
             {
                 next = cur->next;
-                fprintf(lfile, cur->text);
+                fprintf(li.lfile, cur->text);
                 cur = next;
             }
             free(cur);
-            fclose(lfile);
             pthread_mutex_unlock(&mutex);
         }
     }
@@ -241,25 +271,6 @@ void add_list_front(char* nettext)
     newitem->text = nettext;
 
     cur->next = newitem;
-}
-
-void write_list()
-{
-    int ret = 1;
-    while(ret)
-    {
-        ret = _writetext();
-    }
-
-    //if( _szchk() > (KBYTE * KBYTE * KBYTE) )
-    if( _szchk() > 1024 )
-    {
-        bool res = _lotate_file();
-        if(res)
-        {
-            printf("lotation success!! \n");
-        }
-    }
 }
 
 void n_sleep(int sec, int nsec)
