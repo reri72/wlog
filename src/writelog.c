@@ -9,14 +9,16 @@ void *log_thread(void *arg)
         //n_sleep(0, 50);
         n_sleep(1, 0);
 
-        if(get_list_length() > 0)
+        if(get_list_length(loglist) > 1)
         {
+            printf("%d \n", get_list_length(loglist));
+
             if(li.lfile != NULL)
             {
                 int ret = 1;
                 while(ret)
                 {
-                    ret = _writetext();
+                    ret = _writetext(loglist);
                 }
 
                 //if( _szchk() > (KBYTE * KBYTE * KBYTE) )
@@ -29,7 +31,6 @@ void *log_thread(void *arg)
                     }
                 }
             }
-            printf("len : %d \n", get_list_length());
         }
         else
         {
@@ -46,7 +47,7 @@ void _init_wlog(_logset set)
 {
     status = true;
     
-    loglist = malloc(sizeof(loglist));
+    loglist = (llist_t *)malloc(sizeof(llist_t));
     loglist->next = NULL;
 
     memset(&li, 0x00, sizeof(_loginfo_t));
@@ -102,6 +103,7 @@ void _insertlog(const char *level, const char *filename, const int line, const c
     char time_string[128] = {0,};
     char logbuffer[MAX_ASIZE] = {0,};
     char argbuf[MAX_ASIZE] = {0,};
+    int ret = 1;
     va_list va;
 
     va_start(va, args);
@@ -112,7 +114,17 @@ void _insertlog(const char *level, const char *filename, const int line, const c
     snprintf(logbuffer, MAX_SIZE, "%-20s [%s]  %s  %s(%d) :  %s",
                                     time_string, level, funcname, filename, line, argbuf);
 
-    add_list_front(logbuffer);
+retry:
+
+    ret = pthread_mutex_trylock(&mutex);
+    if(ret != 0)
+    {
+        goto retry;
+    }
+
+    add_list_item(loglist, logbuffer);
+    pthread_mutex_unlock(&mutex);
+
 }
 
 void _getnow(char *buf)
@@ -218,27 +230,23 @@ bool _lotate_file()
     return ret;
 }
 
-int _writetext()
+int _writetext(llist_t *list)
 {
     int ret = 1;
 
     if(li.lfile != NULL)
     {
-        llist_t *cur = loglist;
-        llist_t *next = NULL;
-        
+
+retrywt:
         ret = pthread_mutex_trylock(&mutex);
-        if(ret == 0)
+        if(ret != 0)
         {
-            while(cur != NULL)
-            {
-                next = cur->next;
-                fprintf(li.lfile, cur->text);
-                cur = next;
-            }
-            free(cur);
-            pthread_mutex_unlock(&mutex);
+            goto retrywt;
         }
+
+        // do something...
+
+        pthread_mutex_unlock(&mutex);
     }
     else
     {
@@ -248,29 +256,39 @@ int _writetext()
     return 0;
 }
 
-int get_list_length()
+int get_list_length(llist_t *list)
 {
-    int len = -1;
-    llist_t *cur = loglist;
+    int len = 0;
+    llist_t *cur = list;
 
     while(cur != NULL)
     {
         len++;
         cur = cur->next;
     }
-
-    return len; 
+    return len;
 }
 
-void add_list_front(char* nettext)
+void add_list_item(llist_t *list, char* newtext)
 {
-    llist_t *cur = loglist;
-    llist_t *newitem = malloc(sizeof(llist_t));
-    
-    newitem->next = cur->next;
-    newitem->text = nettext;
+    llist_t *end = find_end(list);
 
-    cur->next = newitem;
+    llist_t *new = (llist_t *) malloc(sizeof(llist_t));
+    
+    new->text = newtext;
+    end->next = new;
+    new->next = NULL;
+}
+
+llist_t *find_end(llist_t *list)
+{
+    llist_t *cur = list;
+    while(cur->next != NULL)
+    {
+        cur = cur->next;
+    }
+
+    return cur;
 }
 
 void n_sleep(int sec, int nsec)

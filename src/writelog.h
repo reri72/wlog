@@ -70,7 +70,8 @@ typedef struct loginfo
     FILE *lfile;
 } _loginfo_t;
 
-typedef struct llist{
+typedef struct llist
+{
     struct llist *next;
     char* text;
 } llist_t;
@@ -98,10 +99,11 @@ void _getnow(char *buf);
 bool _create_log(char *dir, char *name);
 bool _lotate_file();
 
-int _writetext();
+int _writetext(llist_t *list);
 int _szchk();
 
-int get_list_length();
-void add_list_front(char* nettext);
+int get_list_length(llist_t *list);
+void add_list_item(llist_t *list, char* newtext);
+llist_t *find_end(llist_t *list);
 
 void n_sleep(int sec, int nsec);
