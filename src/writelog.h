@@ -103,7 +103,8 @@ int _writetext(llist_t *list);
 int _szchk();
 
 int get_list_length(llist_t *list);
+void print_list(llist_t *list);
 void add_list_item(llist_t *list, char* newtext);
-llist_t *find_end(llist_t *list);
+void del_all_node(llist_t *list);
 
 void n_sleep(int sec, int nsec);

@@ -9,17 +9,15 @@ void *log_thread(void *arg)
         //n_sleep(0, 50);
         n_sleep(1, 0);
 
-        if(get_list_length(loglist) > 1)
+        if(get_list_length(loglist) > 0)
         {
-            printf("%d \n", get_list_length(loglist));
-
             if(li.lfile != NULL)
             {
-                int ret = 1;
-                while(ret)
-                {
-                    ret = _writetext(loglist);
-                }
+                // int ret = 1;
+                // while(ret)
+                // {
+                //     ret = _writetext(loglist);
+                // }
 
                 //if( _szchk() > (KBYTE * KBYTE * KBYTE) )
                 if( _szchk() > 1024 )
@@ -74,18 +72,10 @@ void _destroy_wlog()
 {
     pthread_mutex_destroy(&mutex);
 
-    llist_t *cur = loglist;
-    llist_t *next = NULL;
-
     status = false;
     n_sleep(0, 100);
 
-    while(cur != NULL)
-    {
-        next = cur->next;
-        free(cur);
-        cur = next;
-    }
+    del_all_node(loglist);
 
     if(li.lfile != NULL)
     {
@@ -114,16 +104,11 @@ void _insertlog(const char *level, const char *filename, const int line, const c
     snprintf(logbuffer, MAX_SIZE, "%-20s [%s]  %s  %s(%d) :  %s",
                                     time_string, level, funcname, filename, line, argbuf);
 
-retry:
-
-    ret = pthread_mutex_trylock(&mutex);
-    if(ret != 0)
+    if(pthread_mutex_trylock(&mutex) == 0)
     {
-        goto retry;
+        add_list_item(loglist, logbuffer);
+        pthread_mutex_unlock(&mutex);
     }
-
-    add_list_item(loglist, logbuffer);
-    pthread_mutex_unlock(&mutex);
 
 }
 
@@ -236,17 +221,13 @@ int _writetext(llist_t *list)
 
     if(li.lfile != NULL)
     {
-
-retrywt:
-        ret = pthread_mutex_trylock(&mutex);
-        if(ret != 0)
+        if(pthread_mutex_trylock(&mutex) == 0)
         {
-            goto retrywt;
+            // do something
+            // fprintf(li.lfile, cur->text);
+            
+            pthread_mutex_unlock(&mutex);
         }
-
-        // do something...
-
-        pthread_mutex_unlock(&mutex);
     }
     else
     {
@@ -271,24 +252,53 @@ int get_list_length(llist_t *list)
 
 void add_list_item(llist_t *list, char* newtext)
 {
-    llist_t *end = find_end(list);
+    llist_t *cur = list;
+    llist_t *newnode = malloc(sizeof(llist_t));
 
-    llist_t *new = (llist_t *) malloc(sizeof(llist_t));
+    printf("%s \n", newtext);
+    printf("%d \n", get_list_length(cur));
     
-    new->text = newtext;
-    end->next = new;
-    new->next = NULL;
+    newnode->next = NULL;
+    newnode->text = newtext;
+
+    if(cur == NULL)
+    {
+        cur->next = newnode;
+    }
+    else
+    {
+        while (cur->next != NULL)
+        {
+            cur = cur->next;
+        }
+        cur->next = newnode;
+    }
 }
 
-llist_t *find_end(llist_t *list)
+void print_list(llist_t *list)
 {
-    llist_t *cur = list;
-    while(cur->next != NULL)
+    llist_t *cur = list->next;
+    int i;
+    int size = get_list_length(list);
+
+    for(i = 0; i < size; i++)
     {
+        printf("[ list pos[%d] = %s (addr : %d) ] \n", i, cur->text, &cur->text);
         cur = cur->next;
     }
+}
 
-    return cur;
+void del_all_node(llist_t *list)
+{
+    llist_t *tmp = NULL;
+    llist_t *cur = list;
+
+    while (cur != NULL)
+    {
+        tmp = cur->next;
+        free(tmp);
+        cur = tmp;
+    }
 }
 
 void n_sleep(int sec, int nsec)
