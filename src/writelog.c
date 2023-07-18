@@ -13,14 +13,9 @@ void *log_thread(void *arg)
         {
             if(li.lfile != NULL)
             {
-                // int ret = 1;
-                // while(ret)
-                // {
-                //     ret = _writetext(loglist);
-                // }
+                _writetext(loglist);
 
-                //if( _szchk() > (KBYTE * KBYTE * KBYTE) )
-                if( _szchk() > 1024 )
+                if( _szchk() > (KBYTE * KBYTE * KBYTE) )
                 {
                     bool res = _lotate_file();
                     if(res)
@@ -35,7 +30,6 @@ void *log_thread(void *arg)
             continue;
         }
     }
-
     n_sleep(0, 10);
 
     return NULL;
@@ -106,6 +100,7 @@ void _insertlog(const char *level, const char *filename, const int line, const c
 
     if(pthread_mutex_trylock(&mutex) == 0)
     {
+        printf("%s \n", logbuffer);
         add_list_item(loglist, logbuffer);
         pthread_mutex_unlock(&mutex);
     }
@@ -223,8 +218,14 @@ int _writetext(llist_t *list)
     {
         if(pthread_mutex_trylock(&mutex) == 0)
         {
-            // do something
-            // fprintf(li.lfile, cur->text);
+            llist_t *cur = list->next;
+            while(cur != NULL)
+            {
+                fprintf(li.lfile, (const char*)cur->text);
+                //printf("%s ] %s \b", __FUNCTION__, cur->text);
+                cur = cur->next;
+            }
+            free(cur);
             
             pthread_mutex_unlock(&mutex);
         }
@@ -255,8 +256,7 @@ void add_list_item(llist_t *list, char* newtext)
     llist_t *cur = list;
     llist_t *newnode = malloc(sizeof(llist_t));
 
-    printf("%s \n", newtext);
-    printf("%d \n", get_list_length(cur));
+    printf("%s ] %s \b", __FUNCTION__, newtext);
     
     newnode->next = NULL;
     newnode->text = newtext;
@@ -296,7 +296,7 @@ void del_all_node(llist_t *list)
     while (cur != NULL)
     {
         tmp = cur->next;
-        free(tmp);
+        free(cur);
         cur = tmp;
     }
 }
