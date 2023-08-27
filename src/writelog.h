@@ -70,13 +70,14 @@ typedef struct loginfo
     FILE *lfile;
 } _loginfo_t;
 
-typedef struct llist
+typedef struct logq
 {
-    struct llist *next;
-    char* text;
-} llist_t;
+    int max;
+    int num;
+    char *text;
+} logq_t;
 
-llist_t *loglist;
+logq_t logqueue;
 
 _loginfo_t li;
 extern _logset loglevel;
@@ -90,7 +91,8 @@ volatile bool status;
 /*  function    */
 void *log_thread(void *arg);
 
-void _init_wlog(_logset set);
+int _init_wlog(_logset set, int max);
+void _terminate_wlog(logq_t *que);
 void _destroy_wlog();
 void _changellevel(_logset set);
 void _insertlog(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...);
@@ -99,12 +101,12 @@ void _getnow(char *buf);
 bool _create_log(char *dir, char *name);
 bool _lotate_file();
 
-int _writetext(llist_t *list);
-int _szchk();
+int _writetext(logq_t *que);
+int _file_sizecheck();
 
-int get_list_length(llist_t *list);
-void print_list(llist_t *list);
-void add_list_item(llist_t *list, char* newtext);
-void del_all_node(llist_t *list);
+int _get_que_size(logq_t *que);
+void print_list(const logq_t *que);
+void _add_item(logq_t *que, char* newtext);
+void _clear_que(logq_t *que);
 
 void n_sleep(int sec, int nsec);

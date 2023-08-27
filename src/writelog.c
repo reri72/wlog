@@ -4,18 +4,19 @@ _logset loglevel = LOG_ERROR;
 
 void *log_thread(void *arg)
 {
+    int i = 0;
     while(status)
     {
         //n_sleep(0, 50);
         n_sleep(1, 0);
 
-        if(get_list_length(loglist) > 0)
+        if(_get_que_size(&logqueue) > 0)
         {
             if(li.lfile != NULL)
             {
-                _writetext(loglist);
+                _writetext(&logqueue);
 
-                if( _szchk() > (KBYTE * KBYTE * KBYTE) )
+                if( _file_sizecheck() > (KBYTE * KBYTE * KBYTE) )
                 {
                     bool res = _lotate_file();
                     if(res)
@@ -35,16 +36,18 @@ void *log_thread(void *arg)
     return NULL;
 }
 
-void _init_wlog(_logset set)
+int _init_wlog(_logset set, int max)
 {
     status = true;
+
+    loglevel = set;
     
-    loglist = (llist_t *)malloc(sizeof(llist_t));
-    loglist->next = NULL;
+    logqueue.text = NULL;
+    logqueue.num = 0;
+    logqueue.max = max;
 
     memset(&li, 0x00, sizeof(_loginfo_t));
-    loglevel = set;
-
+    
     pthread_mutex_init(&mutex, NULL);
     
     if( pthread_create(&tid, NULL, log_thread, NULL) != 0 )
@@ -60,6 +63,21 @@ void _init_wlog(_logset set)
         perror("thread detach error");
         exit(0);
     }
+
+    return 0;
+}
+
+void _terminate_wlog(logq_t *que)
+{
+    if(que->num > 0)
+    {
+        int i = 0;
+        for(i; i < que->num; i++)
+        {
+            free(&que->text[i]);
+        }
+    }
+    que->max = que->num = 0;
 }
 
 void _destroy_wlog()
@@ -69,7 +87,7 @@ void _destroy_wlog()
     status = false;
     n_sleep(0, 100);
 
-    del_all_node(loglist);
+    _terminate_wlog(&logqueue);
 
     if(li.lfile != NULL)
     {
@@ -100,11 +118,9 @@ void _insertlog(const char *level, const char *filename, const int line, const c
 
     if(pthread_mutex_trylock(&mutex) == 0)
     {
-        printf("%s \n", logbuffer);
-        add_list_item(loglist, logbuffer);
+        _add_item(&logqueue, logbuffer);
         pthread_mutex_unlock(&mutex);
     }
-
 }
 
 void _getnow(char *buf)
@@ -113,7 +129,7 @@ void _getnow(char *buf)
     strftime(buf, sizeof(char) * 128, "%Y-%m-%d %H:%M:%S", localtime(&now));
 }
 
-int _szchk()
+int _file_sizecheck()
 {
     struct stat finfo;
     int res = 0;
@@ -210,94 +226,67 @@ bool _lotate_file()
     return ret;
 }
 
-int _writetext(llist_t *list)
+int _writetext(logq_t *que)
 {
-    int ret = 1;
+    int ret = 0;
 
     if(li.lfile != NULL)
     {
         if(pthread_mutex_trylock(&mutex) == 0)
         {
-            llist_t *cur = list->next;
-            while(cur != NULL)
+            if(que->num > 0)
             {
-                fprintf(li.lfile, (const char*)cur->text);
-                //printf("%s ] %s \b", __FUNCTION__, cur->text);
-                cur = cur->next;
+                int i = 0;
+                for(i; i < que->num; i++)
+                {
+                    printf("%s \n", que->text);
+                    //fprintf(li.lfile, (const char*)que->text[i]);
+                }
+                _clear_que(que);
             }
-            free(cur);
-            
             pthread_mutex_unlock(&mutex);
         }
     }
     else
     {
-        return 1;
+        ret = -1;
     }
 
-    return 0;
+    return ret;
 }
 
-int get_list_length(llist_t *list)
+int _get_que_size(logq_t *que)
 {
-    int len = 0;
-    llist_t *cur = list;
-
-    while(cur != NULL)
-    {
-        len++;
-        cur = cur->next;
-    }
-    return len;
+    return que->num;
 }
 
-void add_list_item(llist_t *list, char* newtext)
+void _add_item(logq_t *que, char* newtext)
 {
-    llist_t *cur = list;
-    llist_t *newnode = malloc(sizeof(llist_t));
+    que->text[que->num] = (char*)malloc( strlen(newtext) * sizeof(char) );
+    que->text[que->num++] = &newtext;
+}
 
-    printf("%s ] %s \b", __FUNCTION__, newtext);
-    
-    newnode->next = NULL;
-    newnode->text = newtext;
-
-    if(cur == NULL)
+void print_list(const logq_t *que)
+{
+    if(que->num > 0)
     {
-        cur->next = newnode;
-    }
-    else
-    {
-        while (cur->next != NULL)
+        int i = 0;
+        for(i; i < que->num; i++)
         {
-            cur = cur->next;
+            printf("queue[%d] : %s \n", i, que->text[i]);
         }
-        cur->next = newnode;
     }
 }
 
-void print_list(llist_t *list)
+void _clear_que(logq_t *que)
 {
-    llist_t *cur = list->next;
-    int i;
-    int size = get_list_length(list);
-
-    for(i = 0; i < size; i++)
+    if(que->num > 0)
     {
-        printf("[ list pos[%d] = %s (addr : %d) ] \n", i, cur->text, &cur->text);
-        cur = cur->next;
-    }
-}
-
-void del_all_node(llist_t *list)
-{
-    llist_t *tmp = NULL;
-    llist_t *cur = list;
-
-    while (cur != NULL)
-    {
-        tmp = cur->next;
-        free(cur);
-        cur = tmp;
+        int i = 0;
+        for(i; i < que->num; i++)
+        {
+            free(&que->text[i]);
+        }
     }
 }
 
