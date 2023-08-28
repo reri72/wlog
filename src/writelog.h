@@ -74,7 +74,7 @@ typedef struct logq
 {
     int max;
     int num;
-    char *text;
+    char *text[1024];
 } logq_t;
 
 logq_t logqueue;
@@ -101,7 +101,7 @@ void _getnow(char *buf);
 bool _create_log(char *dir, char *name);
 bool _lotate_file();
 
-int _writetext(logq_t *que);
+int _writetext();
 int _file_sizecheck();
 
 int _get_que_size(logq_t *que);

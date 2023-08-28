@@ -14,7 +14,7 @@ void *log_thread(void *arg)
         {
             if(li.lfile != NULL)
             {
-                _writetext(&logqueue);
+                _writetext();
 
                 if( _file_sizecheck() > (KBYTE * KBYTE * KBYTE) )
                 {
@@ -42,7 +42,6 @@ int _init_wlog(_logset set, int max)
 
     loglevel = set;
     
-    logqueue.text = NULL;
     logqueue.num = 0;
     logqueue.max = max;
 
@@ -226,7 +225,7 @@ bool _lotate_file()
     return ret;
 }
 
-int _writetext(logq_t *que)
+int _writetext()
 {
     int ret = 0;
 
@@ -234,15 +233,16 @@ int _writetext(logq_t *que)
     {
         if(pthread_mutex_trylock(&mutex) == 0)
         {
-            if(que->num > 0)
+            if(logqueue.num > 0)
             {
                 int i = 0;
-                for(i; i < que->num; i++)
+                for(i; i < logqueue.num; i++)
                 {
-                    printf("%s \n", que->text);
-                    //fprintf(li.lfile, (const char*)que->text[i]);
+                    // 왜 같은게 찍히지
+                    printf("%s %s \n", __FUNCTION__, logqueue.text[i]);
+                    fprintf(li.lfile, (const char*)logqueue.text[i]);
                 }
-                _clear_que(que);
+                _clear_que(&logqueue);
             }
             pthread_mutex_unlock(&mutex);
         }
@@ -263,7 +263,7 @@ int _get_que_size(logq_t *que)
 void _add_item(logq_t *que, char* newtext)
 {
     que->text[que->num] = (char*)malloc( strlen(newtext) * sizeof(char) );
-    que->text[que->num++] = &newtext;
+    que->text[que->num++] = newtext;
 }
 
 void print_list(const logq_t *que)
@@ -285,7 +285,10 @@ void _clear_que(logq_t *que)
         int i = 0;
         for(i; i < que->num; i++)
         {
-            free(&que->text[i]);
+            if(que->text[i])
+            {
+                free(que->text[i]);
+            }
         }
     }
 }
