@@ -19,9 +19,9 @@ void *log_thread(void *arg)
                 if( _file_sizecheck() > (KBYTE) )
                 {
                     bool res = _lotate_file();
-                    if(res)
+                    if(!res)
                     {
-                        printf("lotation success!! \n");
+                        printf("lotation failed. \n");
                     }
                 }
             }
@@ -146,26 +146,28 @@ bool _create_log(char *dir, char *name)
     if(dir != NULL)
     {
         mkdir(dir, 0755);
+    }
 
-        dirinfo = opendir(dir);
-        if (dirinfo != NULL)
-        {
-            strcpy(li.dir, dir);
+    dirinfo = opendir(dir);
+
+    if (dirinfo != NULL)
+    {
+        strcpy(li.dir, dir);
 #if 0
-            while (direntry = readdir(dirinfo))
-            {
-                printf("%s \n",direntry->d_name);
-            }
-#endif
-            li.lfile = fopen(name, "a+");
-            if(li.lfile != NULL)
-            {
-                ret = true;
-                strcpy(li.fname, name);
-                snprintf(li.fullpath, 641, "%s%s", li.dir, li.fname);
-            }
-            closedir(dirinfo);
+        while (direntry = readdir(dirinfo))
+        {
+            printf("%s \n",direntry->d_name);
         }
+#endif
+
+        li.lfile = fopen(name, "a+");
+        if(li.lfile != NULL)
+        {
+            ret = true;
+            strcpy(li.fname, name);
+            snprintf(li.fullpath, 641, "%s%s", li.dir, li.fname);
+        }
+        closedir(dirinfo);
     }
  
     return ret;
@@ -180,25 +182,24 @@ bool _lotate_file()
     bool ret = false;
     int i;
     
-    if(li.lfile != NULL)
+    if(fclose(li.lfile) != 0)
     {
-        fclose(li.lfile);
+        printf("fclose failed. \n");
     }
 
     for(i = 9; i > 0; i--)
     {
         snprintf(nname, 641, "%s%s.%d", li.dir, li.fname, i);
         snprintf(nname2, 641, "%s%s.%d", li.dir, li.fname, i+1);
-
         rename(nname, nname2);
-        
+
         nname2[0] = 0;
         nname[0] = 0;
     }
 
     snprintf(nfname, 641, "%s.%d", li.fullpath, 1);
     rename(li.fullpath, nfname);
-    
+
     ret = _create_log(li.dir, li.fname);
     if(!ret)
     {
