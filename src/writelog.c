@@ -16,7 +16,7 @@ void *log_thread(void *arg)
             {
                 _writetext();
 
-                if( _file_sizecheck() > (KBYTE * KBYTE * KBYTE) )
+                if( _file_sizecheck() > (KBYTE) )
                 {
                     bool res = _lotate_file();
                     if(res)
@@ -68,14 +68,7 @@ int _init_wlog(_logset set, int max)
 
 void _terminate_wlog(logq_t *que)
 {
-    if(que->num > 0)
-    {
-        int i = 0;
-        for(i; i < que->num; i++)
-        {
-            free(&que->text[i]);
-        }
-    }
+    _clear_que(que);
     que->max = que->num = 0;
 }
 
@@ -117,7 +110,7 @@ void _insertlog(const char *level, const char *filename, const int line, const c
 
     if(pthread_mutex_trylock(&mutex) == 0)
     {
-        _add_item(&logqueue, logbuffer);
+        _add_item(logbuffer);
         pthread_mutex_unlock(&mutex);
     }
 }
@@ -171,17 +164,7 @@ bool _create_log(char *dir, char *name)
                 strcpy(li.fname, name);
                 snprintf(li.fullpath, 641, "%s%s", li.dir, li.fname);
             }
-            else
-            {
-                ret = false;
-                status = false;
-            }
             closedir(dirinfo);
-        }
-        else
-        {
-            ret = false;
-            status = false;
         }
     }
  
@@ -208,7 +191,7 @@ bool _lotate_file()
         snprintf(nname2, 641, "%s%s.%d", li.dir, li.fname, i+1);
 
         rename(nname, nname2);
-
+        
         nname2[0] = 0;
         nname[0] = 0;
     }
@@ -238,8 +221,6 @@ int _writetext()
                 int i = 0;
                 for(i; i < logqueue.num; i++)
                 {
-                    // 왜 같은게 찍히지
-                    printf("%s %s \n", __FUNCTION__, logqueue.text[i]);
                     fprintf(li.lfile, (const char*)logqueue.text[i]);
                 }
                 _clear_que(&logqueue);
@@ -260,10 +241,10 @@ int _get_que_size(logq_t *que)
     return que->num;
 }
 
-void _add_item(logq_t *que, char* newtext)
+void _add_item(char* newtext)
 {
-    que->text[que->num] = (char*)malloc( strlen(newtext) * sizeof(char) );
-    que->text[que->num++] = newtext;
+    logqueue.text[logqueue.num] = (char*)malloc( strlen(newtext) + 1 );
+    strcpy(logqueue.text[logqueue.num++], newtext);
 }
 
 void print_list(const logq_t *que)
@@ -283,11 +264,13 @@ void _clear_que(logq_t *que)
     if(que->num > 0)
     {
         int i = 0;
-        for(i; i < que->num; i++)
+        int j = que->num;
+        for(i; i < j; i++)
         {
             if(que->text[i])
             {
                 free(que->text[i]);
+                que->num--;
             }
         }
     }

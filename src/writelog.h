@@ -106,7 +106,7 @@ int _file_sizecheck();
 
 int _get_que_size(logq_t *que);
 void print_list(const logq_t *que);
-void _add_item(logq_t *que, char* newtext);
+void _add_item(char* newtext);
 void _clear_que(logq_t *que);
 
 void n_sleep(int sec, int nsec);
