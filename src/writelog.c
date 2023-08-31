@@ -128,16 +128,19 @@ bool create_logfile(char *dir, char *name)
     DIR *dirinfo;
     struct dirent *direntry;
 
-    if(dir != NULL)
+    dirinfo = opendir(dir);
+
+    if (dirinfo == NULL)
     {
         mkdir(dir, 0755);
     }
-
-    dirinfo = opendir(dir);
-
-    if (dirinfo != NULL)
+    else
     {
-        strcpy(li.dir, dir);
+        if(strlen(li.dir) < 1)
+            strcpy(li.dir, dir);
+        if(strlen(li.fname) < 1)
+            strcpy(li.fname, name);
+
 #if 0
         while (direntry = readdir(dirinfo))
         {
@@ -145,13 +148,19 @@ bool create_logfile(char *dir, char *name)
         }
 #endif
 
-        li.lfile = fopen(name, "a+");
+        if(strlen(li.fullpath) < 1)
+            snprintf(li.fullpath, 641, "%s%s", li.dir, li.fname);
+
+        printf("[%s]%s \n", __FUNCTION__, li.dir);
+        printf("[%s]%s \n", __FUNCTION__, li.fname);
+        printf("[%s]%s \n", __FUNCTION__, li.fullpath);
+
+        li.lfile = fopen(li.fullpath, "a+");
         if(li.lfile != NULL)
         {
             ret = true;
-            strcpy(li.fname, name);
-            snprintf(li.fullpath, 641, "%s%s", li.dir, li.fname);
         }
+
         closedir(dirinfo);
     }
  
@@ -167,10 +176,7 @@ bool lotate_file()
     bool ret = false;
     int i;
     
-    if(fclose(li.lfile) != 0)
-    {
-        printf("fclose failed. \n");
-    }
+    fclose(li.lfile);
 
     for(i = 9; i > 0; i--)
     {

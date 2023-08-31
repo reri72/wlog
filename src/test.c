@@ -2,25 +2,22 @@
 
 int main(int argc, char const *argv[])
 {
-    _init_wlog( LOG_DEBUG, (KBYTE * KBYTE * KBYTE));
-    _create_log("/home/github/printlog/src/","writelog.log");
+    init_wlog( LOG_DEBUG, (KBYTE * KBYTE * KBYTE));
+    create_logfile("/home/github/printlog/src/","writelog.log");
     
     int i = 0;
-    while(i < 100)
+    while(i < 30)
     {
         wlog_info("hello~ \n");
         wlog_debug("hi ~ \n");
         wlog_err("bye~ \n");
         wlog_warn("bi \n\n");
-        n_sleep(0,50);
+        n_sleep(0,500 );
         i++;
-
-        if(i == 50)
-            n_sleep(1,50);
     }
 
     n_sleep(5,0);
 
-    _destroy_wlog();
+    destroy_wlog();
     return 0;
 }
