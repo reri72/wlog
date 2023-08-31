@@ -10,15 +10,15 @@ void *log_thread(void *arg)
         //n_sleep(0, 50);
         n_sleep(1, 0);
 
-        if(_get_que_size(&logqueue) > 0)
+        if(get_lque_size(&logqueue) > 0)
         {
             if(li.lfile != NULL)
             {
-                _writetext();
+                fwrite_text();
 
-                if( _file_sizecheck() > (KBYTE) )
+                if( logfile_size_check() > (KBYTE) )
                 {
-                    bool res = _lotate_file();
+                    bool res = lotate_file();
                     if(!res)
                     {
                         printf("lotation failed. \n");
@@ -36,7 +36,7 @@ void *log_thread(void *arg)
     return NULL;
 }
 
-int _init_wlog(_logset set, int max)
+int init_wlog(_logset set, int max)
 {
     status = true;
 
@@ -66,20 +66,20 @@ int _init_wlog(_logset set, int max)
     return 0;
 }
 
-void _terminate_wlog(logq_t *que)
+void terminate_wlog(logq_t *que)
 {
-    _clear_que(que);
+    clear_lque(que);
     que->max = que->num = 0;
 }
 
-void _destroy_wlog()
+void destroy_wlog()
 {
     pthread_mutex_destroy(&mutex);
 
     status = false;
     n_sleep(0, 100);
 
-    _terminate_wlog(&logqueue);
+    terminate_wlog(&logqueue);
 
     if(li.lfile != NULL)
     {
@@ -92,7 +92,7 @@ void _changellevel(_logset set)
     loglevel = set;
 }
 
-void _insertlog(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...)
+void _insert(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...)
 {
     char time_string[128] = {0,};
     char logbuffer[MAX_ASIZE] = {0,};
@@ -104,24 +104,24 @@ void _insertlog(const char *level, const char *filename, const int line, const c
     vsprintf(argbuf, args, va);
     va_end(va);
 
-    _getnow(time_string);
+    get_now(time_string);
     snprintf(logbuffer, MAX_SIZE, "%-20s [%s]  %s  %s(%d) :  %s",
                                     time_string, level, funcname, filename, line, argbuf);
 
     if(pthread_mutex_trylock(&mutex) == 0)
     {
-        _add_item(logbuffer);
+        add_logtext(logbuffer);
         pthread_mutex_unlock(&mutex);
     }
 }
 
-void _getnow(char *buf)
+void get_now(char *buf)
 {
     time_t now = time(NULL);
     strftime(buf, sizeof(char) * 128, "%Y-%m-%d %H:%M:%S", localtime(&now));
 }
 
-int _file_sizecheck()
+int logfile_size_check()
 {
     struct stat finfo;
     int res = 0;
@@ -136,7 +136,7 @@ int _file_sizecheck()
     return finfo.st_size;           //byte
 }
 
-bool _create_log(char *dir, char *name)
+bool create_logfile(char *dir, char *name)
 {
     bool ret = false;
 
@@ -173,7 +173,7 @@ bool _create_log(char *dir, char *name)
     return ret;
 }
 
-bool _lotate_file()
+bool lotate_file()
 {
     char nname[128] = {0,};
     char nname2[128] = {0,};
@@ -200,7 +200,7 @@ bool _lotate_file()
     snprintf(nfname, 641, "%s.%d", li.fullpath, 1);
     rename(li.fullpath, nfname);
 
-    ret = _create_log(li.dir, li.fname);
+    ret = create_logfile(li.dir, li.fname);
     if(!ret)
     {
         printf("lotation is failed \n");
@@ -209,7 +209,7 @@ bool _lotate_file()
     return ret;
 }
 
-int _writetext()
+int fwrite_text()
 {
     int ret = 0;
 
@@ -224,7 +224,7 @@ int _writetext()
                 {
                     fprintf(li.lfile, (const char*)logqueue.text[i]);
                 }
-                _clear_que(&logqueue);
+                clear_lque(&logqueue);
             }
             pthread_mutex_unlock(&mutex);
         }
@@ -237,12 +237,12 @@ int _writetext()
     return ret;
 }
 
-int _get_que_size(logq_t *que)
+int get_lque_size(logq_t *que)
 {
     return que->num;
 }
 
-void _add_item(char* newtext)
+void add_logtext(char* newtext)
 {
     logqueue.text[logqueue.num] = (char*)malloc( strlen(newtext) + 1 );
     strcpy(logqueue.text[logqueue.num++], newtext);
@@ -260,7 +260,7 @@ void print_list(const logq_t *que)
     }
 }
 
-void _clear_que(logq_t *que)
+void clear_lque(logq_t *que)
 {
     if(que->num > 0)
     {

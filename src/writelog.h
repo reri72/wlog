@@ -26,28 +26,28 @@
 #define wlog_debug(args, ...) \
     do { \
         if(loglevel >= 3) { \
-           _insertlog("DEBUG", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
+           _insert("DEBUG", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
         } \
     } while(0)
 
 #define wlog_err(args, ...) \
     do { \
         if(loglevel >= 2) { \
-            _insertlog("ERROR", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
+            _insert("ERROR", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
         } \
     } while(0) 
 
 #define wlog_warn(args, ...) \
     do { \
         if(loglevel >= 1) { \
-            _insertlog("WARN", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
+            _insert("WARN", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
         } \
     } while(0) 
 
 #define wlog_info(args, ...) \
     do { \
         if(loglevel >= 0) { \
-            _insertlog("INFO", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
+            _insert("INFO", __FILE__, __LINE__, __FUNCTION__, args, ##__VA_ARGS__); \
         } \
     } while(0) 
 
@@ -91,22 +91,22 @@ volatile bool status;
 /*  function    */
 void *log_thread(void *arg);
 
-int _init_wlog(_logset set, int max);
-void _terminate_wlog(logq_t *que);
-void _destroy_wlog();
+int init_wlog(_logset set, int max);
+void terminate_wlog(logq_t *que);
+void destroy_wlog();
 void _changellevel(_logset set);
-void _insertlog(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...);
-void _getnow(char *buf);
+void _insert(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...);
+void get_now(char *buf);
 
-bool _create_log(char *dir, char *name);
-bool _lotate_file();
+bool create_logfile(char *dir, char *name);
+bool lotate_file();
 
-int _writetext();
-int _file_sizecheck();
+int fwrite_text();
+int logfile_size_check();
 
-int _get_que_size(logq_t *que);
+int get_lque_size(logq_t *que);
 void print_list(const logq_t *que);
-void _add_item(char* newtext);
-void _clear_que(logq_t *que);
+void add_logtext(char* newtext);
+void clear_lque(logq_t *que);
 
 void n_sleep(int sec, int nsec);
