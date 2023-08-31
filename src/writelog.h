@@ -105,7 +105,7 @@ int fwrite_text();
 int logfile_size_check();
 
 int get_lque_size(logq_t *que);
-void print_list(const logq_t *que);
+void print_lque(const logq_t *que);
 void add_logtext(char* newtext);
 void clear_lque(logq_t *que);
 

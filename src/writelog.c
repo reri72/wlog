@@ -121,21 +121,6 @@ void get_now(char *buf)
     strftime(buf, sizeof(char) * 128, "%Y-%m-%d %H:%M:%S", localtime(&now));
 }
 
-int logfile_size_check()
-{
-    struct stat finfo;
-    int res = 0;
-    
-    if(stat(li.fullpath, &finfo) < 0)
-    {
-        printf("[%s] file size check error. \n", __FUNCTION__);
-        perror("stat");
-        exit(1);
-    }
-
-    return finfo.st_size;           //byte
-}
-
 bool create_logfile(char *dir, char *name)
 {
     bool ret = false;
@@ -237,18 +222,27 @@ int fwrite_text()
     return ret;
 }
 
+int logfile_size_check()
+{
+    struct stat finfo;
+    int res = 0;
+    
+    if(stat(li.fullpath, &finfo) < 0)
+    {
+        printf("[%s] file size check error. \n", __FUNCTION__);
+        perror("stat");
+        exit(1);
+    }
+
+    return finfo.st_size;           //byte
+}
+
 int get_lque_size(logq_t *que)
 {
     return que->num;
 }
 
-void add_logtext(char* newtext)
-{
-    logqueue.text[logqueue.num] = (char*)malloc( strlen(newtext) + 1 );
-    strcpy(logqueue.text[logqueue.num++], newtext);
-}
-
-void print_list(const logq_t *que)
+void print_lque(const logq_t *que)
 {
     if(que->num > 0)
     {
@@ -258,6 +252,12 @@ void print_list(const logq_t *que)
             printf("queue[%d] : %s \n", i, que->text[i]);
         }
     }
+}
+
+void add_logtext(char* newtext)
+{
+    logqueue.text[logqueue.num] = (char*)malloc( strlen(newtext) + 1 );
+    strcpy(logqueue.text[logqueue.num++], newtext);
 }
 
 void clear_lque(logq_t *que)
