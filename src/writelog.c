@@ -1,10 +1,10 @@
 #include "writelog.h"
+#include "wutil.h"
 
 _logset loglevel = LOG_ERROR;
 
 void *log_thread(void *arg)
 {
-    int i = 0;
     while(status)
     {
         //n_sleep(0, 50);
@@ -97,7 +97,6 @@ void _insert(const char *level, const char *filename, const int line, const char
     char time_string[128] = {0,};
     char logbuffer[MAX_ASIZE] = {0,};
     char argbuf[MAX_ASIZE] = {0,};
-    int ret = 1;
     va_list va;
 
     va_start(va, args);
@@ -115,19 +114,10 @@ void _insert(const char *level, const char *filename, const int line, const char
     }
 }
 
-void get_now(char *buf)
-{
-    time_t now = time(NULL);
-    strftime(buf, sizeof(char) * 128, "%Y-%m-%d %H:%M:%S", localtime(&now));
-}
-
 bool create_logfile(char *dir, char *name)
 {
     bool ret = false;
-
     DIR *dirinfo;
-    struct dirent *direntry;
-
     dirinfo = opendir(dir);
 
     if (dirinfo == NULL)
@@ -140,13 +130,6 @@ bool create_logfile(char *dir, char *name)
             strcpy(li.dir, dir);
         if(strlen(li.fname) < 1)
             strcpy(li.fname, name);
-
-#if 0
-        while (direntry = readdir(dirinfo))
-        {
-            printf("%s \n",direntry->d_name);
-        }
-#endif
 
         if(strlen(li.fullpath) < 1)
             snprintf(li.fullpath, 641, "%s%s", li.dir, li.fname);
@@ -210,8 +193,8 @@ int fwrite_text()
         {
             if(logqueue.num > 0)
             {
-                int i = 0;
-                for(i; i < logqueue.num; i++)
+                int i;
+                for(i = 0; i < logqueue.num; i++)
                 {
                     fprintf(li.lfile, (const char*)logqueue.text[i]);
                 }
@@ -231,7 +214,6 @@ int fwrite_text()
 int logfile_size_check()
 {
     struct stat finfo;
-    int res = 0;
     
     if(stat(li.fullpath, &finfo) < 0)
     {
@@ -252,8 +234,8 @@ void print_lque(const logq_t *que)
 {
     if(que->num > 0)
     {
-        int i = 0;
-        for(i; i < que->num; i++)
+        int i;
+        for(i = 0; i < que->num; i++)
         {
             printf("queue[%d] : %s \n", i, que->text[i]);
         }
@@ -270,9 +252,9 @@ void clear_lque(logq_t *que)
 {
     if(que->num > 0)
     {
-        int i = 0;
+        int i;
         int j = que->num;
-        for(i; i < j; i++)
+        for(i = 0; i < j; i++)
         {
             if(que->text[i])
             {
@@ -283,14 +265,3 @@ void clear_lque(logq_t *que)
     }
 }
 
-void n_sleep(int sec, int nsec)
-{
-    struct timespec rem, req;
-
-    req.tv_sec = sec;
-    req.tv_nsec = nsec;
-
-    nanosleep(&req, &rem);
-
-    return;
-}

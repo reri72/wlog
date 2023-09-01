@@ -1,3 +1,6 @@
+#ifndef _WWRITELOG_H_
+#define _WWRITELOG_H_
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -7,7 +10,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <time.h>
 #include <pthread.h>
 
 //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -87,7 +89,6 @@ pthread_t tid;
 volatile bool status;
 
 
-
 /*  function    */
 void *log_thread(void *arg);
 
@@ -96,7 +97,6 @@ void terminate_wlog(logq_t *que);
 void destroy_wlog();
 void _changellevel(_logset set);
 void _insert(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...);
-void get_now(char *buf);
 
 bool create_logfile(char *dir, char *name);
 bool lotate_file();
@@ -109,4 +109,4 @@ void print_lque(const logq_t *que);
 void add_logtext(char* newtext);
 void clear_lque(logq_t *que);
 
-void n_sleep(int sec, int nsec);
+#endif

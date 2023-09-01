@@ -3,20 +3,20 @@
 int main(int argc, char const *argv[])
 {
     init_wlog( LOG_DEBUG, (KBYTE * KBYTE * KBYTE));
-    create_logfile("/home/github/printlog/src/","writelog.log");
+    create_logfile("/home/github/printlog/logdir/","testlog.log");
     
     int i = 0;
-    while(i < 30)
+    while(i < 10)
     {
         wlog_info("hello~ \n");
         wlog_debug("hi ~ \n");
         wlog_err("bye~ \n");
         wlog_warn("bi \n\n");
-        n_sleep(0,500 );
+        sleep(1);
         i++;
     }
 
-    n_sleep(5,0);
+    sleep(2);
 
     destroy_wlog();
     return 0;
