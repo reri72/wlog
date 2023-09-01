@@ -124,7 +124,7 @@ bool create_logfile(char *dir, char *name)
     {
         mkdir(dir, 0755);
     }
-    else
+
     {
         if(strlen(li.dir) < 1)
             strcpy(li.dir, dir);
@@ -225,7 +225,7 @@ int logfile_size_check()
     return finfo.st_size;           //byte
 }
 
-int get_lque_size(logq_t *que)
+int get_lque_size(const logq_t *que)
 {
     return que->num;
 }
