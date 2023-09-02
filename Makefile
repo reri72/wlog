@@ -1,21 +1,24 @@
 CC = gcc
 CFLAGS = -g -Wall
 LDFLAGS = -lpthread
-TARGET= testprint
+TARGET= libwlog.a
 SRCSDIR = src
-AR = ar rcs
+TESTDIR = test
+AR = ar src
+SHARED = -shared
 HEADERDIR = include
+
 SRCS = $(wildcard $(SRCSDIR)/*.c)
 OBJS = $(SRCS:.c=.o)
 
-all: $(TARGET)
+
 lib: $(MAKELIB)
 
 .c.o:
-	$(CC) $(CFLAGS) -c $< -o $@ -I $(HEADERDIR)
+	$(CC) $(CFLAGS) -c $< -o $@ -I $(HEADERDIR) $(LDFLAGS)
 
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+lib: $(OBJS)
+	$(AR) $(TARGET) $(OBJS)
 
 clean:
 	rm -f $(SRCSDIR)/*.o
