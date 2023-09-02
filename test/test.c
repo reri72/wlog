@@ -3,9 +3,10 @@
 int main(int argc, char const *argv[])
 {
     init_wlog( LOG_DEBUG, (KBYTE * KBYTE * KBYTE));
-    create_logfile("/home/github/printlog/logdir/","testlog.log");
+    create_logfile("~/logdir/","testlog.log");
     
     int i = 0;
+
     while(i < 10)
     {
         wlog_info("hello~ \n");
@@ -16,7 +17,7 @@ int main(int argc, char const *argv[])
         i++;
     }
 
-    sleep(2);
+    sleep(1);
 
     destroy_wlog();
     return 0;
