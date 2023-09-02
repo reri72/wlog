@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include "writelog.h"
 #include "wutil.h"
 
@@ -12,7 +13,7 @@ void *log_thread(void *arg)
 
         if(get_lque_size(&logqueue) > 0)
         {
-            if(li.lfile != NULL)
+            if(li.lfile)
             {
                 fwrite_text();
 
@@ -81,10 +82,7 @@ void destroy_wlog()
 
     terminate_wlog(&logqueue);
 
-    if(li.lfile != NULL)
-    {
-        fclose(li.lfile);
-    }
+    close(li.lfile);
 }
 
 void _changellevel(_logset set)
@@ -134,15 +132,12 @@ bool create_logfile(char *dir, char *name)
         if(strlen(li.fullpath) < 1)
             snprintf(li.fullpath, 641, "%s%s", li.dir, li.fname);
 
-        printf("[%s]%s \n", __FUNCTION__, li.dir);
-        printf("[%s]%s \n", __FUNCTION__, li.fname);
-        printf("[%s]%s \n", __FUNCTION__, li.fullpath);
+        li.lfile = open(li.fullpath, O_WRONLY|O_CREAT|O_EXCL, 0644);
+        if(li.lfile < 0)
+            li.lfile = open(li.fullpath, O_WRONLY);
 
-        li.lfile = fopen(li.fullpath, "a+");
-        if(li.lfile != NULL)
-        {
-            ret = true;
-        }
+        if(li.lfile > 0)
+            ret = true;        
 
         closedir(dirinfo);
     }
@@ -159,7 +154,7 @@ bool lotate_file()
     bool ret = false;
     int i;
     
-    fclose(li.lfile);
+    close(li.lfile);
 
     for(i = 9; i > 0; i--)
     {
@@ -187,7 +182,7 @@ int fwrite_text()
 {
     int ret = TRUE;
 
-    if(li.lfile != NULL)
+    if(li.lfile)
     {
         if(pthread_mutex_trylock(&mutex) == 0)
         {
@@ -196,7 +191,7 @@ int fwrite_text()
                 int i;
                 for(i = 0; i < logqueue.num; i++)
                 {
-                    fprintf(li.lfile, (const char*)logqueue.text[i]);
+                    write(li.lfile, (const char*)logqueue.text[i], strlen(logqueue.text[i]));
                 }
                 clear_lque(&logqueue);
             }

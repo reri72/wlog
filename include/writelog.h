@@ -69,7 +69,7 @@ typedef struct loginfo
     char dir[512];
     char fname[128];
     char fullpath[641];
-    FILE *lfile;
+    int lfile;
 } _loginfo_t;
 
 typedef struct logq
