@@ -1,25 +1,31 @@
 CC = gcc
-CFLAGS = -g -Wall
+CFLAGS = -Wall -O2
 LDFLAGS = -lpthread
-TARGET= libwlog.a
+TARGETA = libwlog.a
+TARGETS = libwlog.so
 SRCSDIR = src
 TESTDIR = test
 AR = ar src
 SHARED = -shared
+PIC = -fPIC
 HEADERDIR = include
 
 SRCS = $(wildcard $(SRCSDIR)/*.c)
 OBJS = $(SRCS:.c=.o)
 
-
-lib: $(MAKELIB)
+liba: $(TARGETA)
+libs: $(TARGETS)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@ -I $(HEADERDIR) $(LDFLAGS)
 
-lib: $(OBJS)
-	$(AR) $(TARGET) $(OBJS)
+$(TARGETA): $(OBJS)
+	$(AR) $(TARGETA) $(OBJS)
+
+$(TARGETS):
+	$(CC) $(OBJS) $(SHARED) -o $(TARGETS)
 
 clean:
 	rm -f $(SRCSDIR)/*.o
-	rm -f $(TARGET)
+	rm -f $(TARGETA)
+	rm -f $(TARGETS)
