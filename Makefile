@@ -5,8 +5,6 @@ TARGET = libwlog.a
 SRCSDIR = src
 TESTDIR = test
 AR = ar src
-SHARED = -shared
-PIC = -fPIC
 HEADERDIR = include
 
 SRCS = $(wildcard $(SRCSDIR)/*.c)
