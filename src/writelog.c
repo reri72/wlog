@@ -67,9 +67,16 @@ int init_wlog(_logset set, int max)
     logqueue.max = max;
 
     memset(&li, 0x00, sizeof(_loginfo_t));
-    
+
     pthread_mutex_init(&_mutex, NULL);
     
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);  // re-entry
+
+    pthread_mutex_init(&_mutex, &attr);
+    pthread_mutexattr_destroy(&attr);
+
     if( pthread_create(&tid, NULL, log_thread, NULL) != 0 )
     {
         printf("[%s] pthread_createe failed. ", __FUNCTION__);
@@ -131,11 +138,11 @@ void _insert(const char *level, const char *filename, const int line, const char
     snprintf(logbuffer, MAX_SIZE, "%-20s [%s]  %s  %s(%d) :  %s",
                                     time_string, level, funcname, filename, line, argbuf);
 
-    if(pthread_mutex_trylock(&_mutex) == 0)
+    pthread_mutex_lock(&_mutex);
     {
         add_logtext(logbuffer);
-        pthread_mutex_unlock(&_mutex);
     }
+    pthread_mutex_unlock(&_mutex);
 }
 
 
@@ -212,7 +219,7 @@ int fwrite_text()
 
     if(li.lfile)
     {
-        if(pthread_mutex_trylock(&_mutex) == 0)
+        pthread_mutex_lock(&_mutex);
         {
             if(logqueue.num > 0)
             {
@@ -223,8 +230,8 @@ int fwrite_text()
                 }
                 clear_lque(&logqueue);
             }
-            pthread_mutex_unlock(&_mutex);
         }
+        pthread_mutex_unlock(&_mutex);
     }
     else
     {
@@ -271,15 +278,19 @@ void print_lque(const logq_t *que)
 
 void add_logtext(char* newtext)
 {
-    logqueue.text[logqueue.num] = (char*)malloc( strlen(newtext) + 1 );
-    if (logqueue.text[logqueue.num] != NULL)
+    pthread_mutex_lock(&_mutex);
     {
-        strcpy(logqueue.text[logqueue.num++], newtext);
+        logqueue.text[logqueue.num] = (char*)malloc( strlen(newtext) + 1 );
+        if (logqueue.text[logqueue.num] != NULL)
+        {
+            strcpy(logqueue.text[logqueue.num++], newtext);
+        }
+        else
+        {
+            fprintf(stderr, "memory allocation failure \n");
+        }
     }
-    else
-    {
-        fprintf(stderr, "memory allocation failure \n");
-    }
+    pthread_mutex_unlock(&_mutex);
 }
 
 
