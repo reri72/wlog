@@ -40,7 +40,8 @@ void *log_thread(void *arg)
                     int res = lotate_file();
                     if (res < 0)
                     {
-                        printf("lotation failed. \n");
+                        printf("log lotation failed. \n");
+                        fprintf(stderr, "log lotation failed\n");
                     }
                 }
             }
@@ -72,6 +73,7 @@ int init_wlog(_logset set, int max)
     if( pthread_create(&tid, NULL, log_thread, NULL) != 0 )
     {
         printf("[%s] pthread_createe failed. ", __FUNCTION__);
+        fprintf(stderr, "pthread_createe failed\n");
         perror("thread create error");
         exit(0);
     }
@@ -79,6 +81,7 @@ int init_wlog(_logset set, int max)
     if( pthread_detach(tid) != 0 )
     {
         printf("[%s] pthread_detach failed. ", __FUNCTION__);
+        fprintf(stderr, "pthread_detach failed\n");
         perror("thread detach error");
         exit(0);
     }
@@ -238,7 +241,7 @@ int logfile_size_check()
     
     if(stat(li.fullpath, &finfo) < 0)
     {
-        printf("[%s] file size check error. \n", __FUNCTION__);
+        printf("[%s] log file size check error. \n", __FUNCTION__);
         perror("stat");
         exit(1);
     }
