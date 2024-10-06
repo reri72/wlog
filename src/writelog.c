@@ -68,8 +68,6 @@ int init_wlog(_logset set, int max)
 
     memset(&li, 0x00, sizeof(_loginfo_t));
 
-    pthread_mutex_init(&_mutex, NULL);
-    
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);  // re-entry
