@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include <errno.h>
 
 #include "wutil.h"
 
@@ -19,7 +20,18 @@ void n_sleep(int sec, int nsec)
     req.tv_sec = sec;
     req.tv_nsec = nsec;
 
-    nanosleep(&req, &rem);
+    while (nanosleep(&req, &rem) == -1)
+    {
+        if (errno == EINTR)
+        {
+            req = rem;
+        }
+        else
+        {
+            perror("nanosleep failed");
+            break;
+        }
+    }
 
     return;
 }
