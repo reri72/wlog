@@ -17,6 +17,7 @@ liba: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(AR) $(TARGET) $(OBJS)
+	ranlib $(TARGET)
 
 clean:
 	rm -f $(SRCSDIR)/*.o
