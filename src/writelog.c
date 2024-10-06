@@ -205,7 +205,7 @@ int lotate_file()
 
 int fwrite_text()
 {
-    int ret = TRUE;
+    int ret = W_TRUE;
 
     if(li.lfile)
     {
@@ -225,7 +225,7 @@ int fwrite_text()
     }
     else
     {
-        ret = FALSE;
+        ret = W_FALSE;
     }
 
     return ret;

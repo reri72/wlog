@@ -7,8 +7,8 @@
 #define MAX_SIZE    4096
 #define KBYTE  1024
 
-#define FALSE       0;
-#define TRUE        1;
+#define W_FALSE       0
+#define W_TRUE        1
 
 #define wlog_debug(args, ...) \
     do { \
