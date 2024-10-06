@@ -269,24 +269,30 @@ void print_lque(const logq_t *que)
 void add_logtext(char* newtext)
 {
     logqueue.text[logqueue.num] = (char*)malloc( strlen(newtext) + 1 );
-    strcpy(logqueue.text[logqueue.num++], newtext);
+    if (logqueue.text[logqueue.num] != NULL)
+    {
+        strcpy(logqueue.text[logqueue.num++], newtext);
+    }
+    else
+    {
+        fprintf(stderr, "memory allocation failure \n");
+    }
 }
 
 
 void clear_lque(logq_t *que)
 {
-    if(que->num > 0)
+    if (que->num > 0)
     {
-        int i;
-        int j = que->num;
-        for(i = 0; i < j; i++)
+        for (int i = 0; i < que->num; i++)
         {
             if(que->text[i])
             {
                 free(que->text[i]);
-                que->num--;
+                que->text[i] = NULL;
             }
         }
+        que->num = 0;
     }
 }
 
