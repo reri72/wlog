@@ -9,7 +9,7 @@ void get_now(char *buf)
     struct tm ts;
     localtime_r(&now, &ts);
 
-    strftime(buf, sizeof(char) * 128, "%04d-%02d-%02d %02d:%02d:%02d", &ts);
+    strftime(buf, sizeof(char) * 128, "%Y-%m-%d %H:%M:%S", &ts);
 }
 
 void n_sleep(int sec, int nsec)
