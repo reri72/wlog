@@ -1,4 +1,5 @@
 #include "writelog.h"
+#include "wutil.h"
 
 int main(int argc, char const *argv[])
 {
@@ -7,19 +8,19 @@ int main(int argc, char const *argv[])
     
     int i = 0;
 
-    while(i < 10)
+    while (i < 10)
     {
         wlog_info("hello~ \n");
         wlog_debug("hi ~ \n");
         wlog_err("bye~ \n");
         wlog_warn("bi \n\n");
 
-        sleep(1);
+        n_sleep(1,0);
 
         i++;
     }
 
-    sleep(1);
+    n_sleep(1,0);
 
     destroy_wlog();
     

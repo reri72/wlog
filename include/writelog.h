@@ -1,25 +1,10 @@
 #ifndef _WWRITELOG_H_
 #define _WWRITELOG_H_
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <pthread.h>
-
-//  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//  https://github.com/reri72/
-//  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
+//  https://github.com/reri72
 
 /*  definition  */
 #define MAX_SIZE    4096
-#define MAX_ASIZE   2048
 #define KBYTE  1024
 
 #define FALSE       0;
@@ -53,9 +38,6 @@
         } \
     } while(0) 
 
-
-
-/*  variables    */
 typedef enum logset
 {
     LOG_INFO = 0,
@@ -68,7 +50,7 @@ typedef struct loginfo
 {
     char dir[512];
     char fname[128];
-    char fullpath[641];
+    char fullpath[1024];
     int lfile;
 } _loginfo_t;
 
@@ -76,37 +58,27 @@ typedef struct logq
 {
     int max;
     int num;
-    char *text[1024];
+    char *text[4096];
 } logq_t;
 
-logq_t logqueue;
-
-_loginfo_t li;
 extern _logset loglevel;
 
-pthread_mutex_t mutex;
-pthread_t tid;
-volatile bool status;
-
-
 /*  function    */
-void *log_thread(void *arg);
-
 int init_wlog(_logset set, int max);
-void terminate_wlog(logq_t *que);
-void destroy_wlog();
-void _changellevel(_logset set);
-void _insert(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...);
-
-bool create_logfile(char *dir, char *name);
-bool lotate_file();
-
+void *log_thread(void *arg);
+int get_lque_size(const logq_t *que);
 int fwrite_text();
 int logfile_size_check();
+int lotate_file();
+int create_logfile(char *dir, char *name);
 
-int get_lque_size(const logq_t *que);
-void print_lque(const logq_t *que);
-void add_logtext(char* newtext);
+void destroy_wlog();
+void terminate_wlog(logq_t *que);
 void clear_lque(logq_t *que);
+
+void _changellevel(_logset set);
+void _insert(const char *level, const char *filename, const int line, const char *funcname, const char * args, ...);
+void add_logtext(char* newtext);
+void print_lque(const logq_t *que);
 
 #endif

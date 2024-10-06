@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <time.h>
+
 #include "wutil.h"
 
 void get_now(char *buf)
 {
     time_t now = time(NULL);
-    strftime(buf, sizeof(char) * 128, "%Y-%m-%d %H:%M:%S", localtime(&now));
+    struct tm ts;
+    localtime_r(&now, &ts);
+
+    strftime(buf, sizeof(char) * 128, "%04d-%02d-%02d %02d:%02d:%02d", &ts);
 }
 
 void n_sleep(int sec, int nsec)
