@@ -3,7 +3,6 @@ CFLAGS = -Wall -O2
 LDFLAGS = -lpthread
 TARGET = libwlog.a
 SRCSDIR = src
-TESTDIR = test
 AR = ar src
 HEADERDIR = include
 

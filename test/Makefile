@@ -1,5 +1,4 @@
 CC = gcc
-CFLAGS = -g -Wall -O2
 LDFLAGS = -lwlog -lpthread
 TARGET = test
 HEADERDIR = ../include
